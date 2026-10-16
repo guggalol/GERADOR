@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Nomes e Senhas</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #111827, #1e3a8a);
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: #ffffff;
+            color: #111827;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .resultado {
+            margin-top: 25px;
+        }
+
+        .campo {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .saida {
+            display: flex;
+            gap: 8px;
+        }
+
+        input {
+            flex: 1;
+            padding: 13px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            background: #f5f5f5;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 13px 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .gerar {
+            width: 100%;
+            background: #2563eb;
+            color: white;
+            font-size: 17px;
+            margin-top: 10px;
+        }
+
+        .gerar:hover {
+            background: #1d4ed8;
+        }
+
+        .copiar {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .copiar:hover {
+            background: #d1d5db;
+        }
+
+        .contador {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🔐 Gerador</h1>
+
+    <p style="text-align:center;">
+        Gere um nome de usuário e uma senha únicos.
+    </p>
+
+    <div class="resultado">
+
+        <div class="campo">
+            <label>Nome de usuário</label>
+
+            <div class="saida">
+                <input id="nome" readonly>
+                <button class="copiar" onclick="copiar('nome')">
+                    Copiar
+                </button>
+            </div>
+        </div>
+
+        <div class="campo">
+            <label>Senha</label>
+
+            <div class="saida">
+                <input id="senha" readonly>
+                <button class="copiar" onclick="copiar('senha')">
+                    Copiar
+                </button>
+            </div>
+        </div>
+
+        <button class="gerar" onclick="gerarTudo()">
+            🎲 Gerar novo
+        </button>
+
+        <div class="contador">
+            Combinações geradas nesta página:
+            <strong id="contador">0</strong>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    // Palavras usadas para criar os nomes
+    const palavras = [
+        "Lobo",
+        "Fenix",
+        "Nexus",
+        "Titan",
+        "Shadow",
+        "Pixel",
+        "Dragon",
+        "Storm",
+        "Cyber",
+        "Galaxy",
+        "Hunter",
+        "Raptor",
+        "Cosmos",
+        "Blaze",
+        "Wolf",
+        "Phantom",
+        "Nova",
+        "Legend",
+        "Quantum",
+        "Vortex"
+    ];
+
+    // Caracteres permitidos na senha
+    const caracteres =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+        "abcdefghijklmnopqrstuvwxyz" +
+        "0123456789" +
+        "!@#$%&*";
+
+    // Recupera os códigos já usados
+    let usados = JSON.parse(
+        localStorage.getItem("geradoresUsados")
+    ) || [];
+
+    let contador = 0;
+
+
+    // Gera número aleatório seguro
+    function numeroAleatorio(max) {
+        const array = new Uint32Array(1);
+        crypto.getRandomValues(array);
+
+        return array[0] % max;
+    }
+
+
+    // Gera uma senha
+    function gerarSenha(tamanho = 14) {
+
+        let senha = "";
+
+        for (let i = 0; i < tamanho; i++) {
+            senha += caracteres[
+                numeroAleatorio(caracteres.length)
+            ];
+        }
+
+        return senha;
+    }
+
+
+    // Gera um nome
+    function gerarNome() {
+
+        const palavra =
+            palavras[numeroAleatorio(palavras.length)];
+
+        const numero =
+            numeroAleatorio(99999)
+            .toString()
+            .padStart(5, "0");
+
+        return palavra + numero;
+    }
+
+
+    // Gera uma combinação completa
+    function gerarTudo() {
+
+        let nome;
+        let senha;
+        let identificador;
+
+        do {
+
+            nome = gerarNome();
+            senha = gerarSenha();
+
+            // A combinação inteira é usada como identificador
+            identificador = nome + "|" + senha;
+
+        } while (usados.includes(identificador));
+
+
+        // Guarda a combinação
+        usados.push(identificador);
+
+        localStorage.setItem(
+            "geradoresUsados",
+            JSON.stringify(usados)
+        );
+
+
+        // Mostra na tela
+        document.getElementById("nome").value = nome;
+        document.getElementById("senha").value = senha;
+
+
+        contador++;
+
+        document.getElementById("contador").textContent =
+            contador;
+    }
+
+
+    // Copiar para a área de transferência
+    function copiar(id) {
+
+        const campo = document.getElementById(id);
+
+        navigator.clipboard.writeText(campo.value);
+
+    }
+
+
+    // Gera automaticamente o primeiro resultado
+    gerarTudo();
+
+</script>
+
+</body>
+</html>
